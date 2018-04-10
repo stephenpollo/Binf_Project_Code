@@ -1,0 +1,104 @@
+---
+title: "Binf ChIP-Seq Project"
+author: "Stephen Pollo"
+date: "March 12, 2018"
+output: html_document
+---
+
+#Code for running csaw. Loosely based on the example in the csaw documentation
+#This is the final version that was used to generate the csaw analysis of the ChIP-Seq files
+```{r}
+
+library("csaw", lib.loc="~/R/win-library/3.4")
+library("edgeR", lib.loc="~/R/win-library/3.4")
+
+bam.files <- c("C:/Users/Stephen/Desktop/Binf Assignment/Sorted and indexed files/ENCFF828ZWQ_sorted.bam", "C:/Users/Stephen/Desktop/Binf Assignment/Sorted and indexed files/ENCFF247RDS_sorted.bam", "C:/Users/Stephen/Desktop/Binf Assignment/Sorted and indexed files/ENCFF825FCH_sorted.bam", "C:/Users/Stephen/Desktop/Binf Assignment/Sorted and indexed files/ENCFF729OTK_sorted.bam")
+design <- model.matrix(~factor(c('GM12878', 'GM12878', 'MCF-7', 'MCF-7')))
+colnames(design) <- c("intercept", "cell.type")
+
+param <- readParam(minq=50)
+data <- windowCounts(bam.files, ext=110, width=10, param=param)
+
+keep <- aveLogCPM(asDGEList(data)) >= -1
+data <- data[keep,]
+
+binned <- windowCounts(bam.files, bin=TRUE, width=10000, param=param)
+data <- normOffsets(binned, se.out=data)
+
+y <- asDGEList(data)
+y <- estimateDisp(y, design)
+fit <- glmQLFit(y, design, robust=TRUE)
+results <- glmQLFTest(fit)
+
+merged <- mergeWindows(rowRanges(data), tol=1000L, max.width=10000L)
+tabcom <- combineTests(merged$id, results$table)
+
+summary(width(merged$region))
+
+is.sig <- tabcom$FDR <= 0.05
+library("rtracklayer", lib.loc="~/R/win-library/3.4")
+test <- merged$region[is.sig]
+test$score <- -10*log10(tabcom$FDR[is.sig])
+names(test) <- paste0("region", 1:sum(is.sig))
+export(test, "CSAW GM12878 vs MCF-7 clusters.bed")
+
+write.csv(merged$region, file = "GM12878 vs MCF-7 csaw.csv")
+
+```
+
+#Code for running DIME from the example in the documentation on simulated data
+#All attempts at geneating input for DIME were far too large to even load into R
+```{r}
+
+library("DIME", lib.loc="~/R/win-library/3.4")
+
+
+#The following code is from the example in the DIME documentation to verify the installation
+
+# generate simulated datasets with underlying exponential-normal components
+N1 <- 1500; N2 <- 500; K <- 4; rmu <- c(-2.25,1.50); rsigma <- c(1,1);
+rpi <- c(.05,.45,.45,.05); rbeta <- c(12,10);
+set.seed(1234)
+chr1 <- c(-rgamma(ceiling(rpi[1]*N1),shape = 1,scale = rbeta[1]),
+rnorm(ceiling(rpi[2]*N1),rmu[1],rsigma[1]),
+rnorm(ceiling(rpi[3]*N1),rmu[2],rsigma[2]),
+rgamma(ceiling(rpi[4]*N1),shape = 1,scale = rbeta[2]));
+chr2 <- c(-rgamma(ceiling(rpi[1]*N2),shape = 1,scale = rbeta[1]),
+rnorm(ceiling(rpi[2]*N2),rmu[1],rsigma[1]),
+rnorm(ceiling(rpi[3]*N2),rmu[2],rsigma[2]),
+rgamma(ceiling(rpi[4]*N2),shape = 1,scale = rbeta[2]));
+chr3 <- c(-rgamma(ceiling(rpi[1]*N2),shape = 1,scale = rbeta[1]),
+rnorm(ceiling(rpi[2]*N2),rmu[1],rsigma[1]),
+rnorm(ceiling(rpi[3]*N2),rmu[2],rsigma[2]),
+rgamma(ceiling(rpi[4]*N2),shape = 1,scale = rbeta[2]));
+# analyzing only chromosome 1 and chromosome 3
+data <- list(chr1,chr3);
+# run DIME with small maximum iteration and repetitions
+set.seed(1234);
+test <- DIME(data,gng.max.iter=10,gng.rep=1,inudge.max.iter=10,inudge.rep=1,
+nudge.max.iter=10,nudge.rep=1)
+# get the name of the best fitted model
+test$best$name
+
+# get classification based on inudge
+test$inudge <- DIME.classify(data,test$inudge,obj.cutoff=0.1);
+# vector of classification. 1 represents differential, 0 denotes non-differential
+inudgeClass <- test$inudge$class
+
+```
+
+#Code for running normR loosely following the example in the documentation
+#This is the final version that was used to generate the normR analysis of the ChIP-Seq files
+```{r}
+
+library("normr", lib.loc="~/R/win-library/3.4")
+
+
+GMpooled <- "C:/Users/Stephen/Desktop/Binf Assignment/Sorted and indexed files/combined_ENCFF247RDS_ENCFF828ZWQ_sorted.bam"
+MCFpooled <- "C:/Users/Stephen/Desktop/Binf Assignment/Sorted and indexed files/combined_ENCFF729OTK_ENCFF825FCH_sorted.bam"
+
+diffPooled <- diffR(treatment = GMpooled, control = MCFpooled, genome="hg19", countConfig = countConfigPairedEnd(), procs = 1L, verbose = TRUE, eps = 1e-05, iterations = 10, minP = 0.05)
+
+exportR(x = diffPooled, filename = "normR GM12878 vs MCF-7 pooled regions.bed",fdr=0.01, type=c("bed"))
+
+```

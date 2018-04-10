@@ -1,0 +1,67 @@
+---
+title: "Binf Project Plots"
+author: "Me"
+date: "April 10, 2018"
+output: html_document
+---
+
+
+```{r}
+
+library("readr", lib.loc="~/R/win-library/3.4")
+
+csaw_toplot <- read_delim("C:/Users/Stephen/Desktop/Binf Assignment/Analysis/csaw_toplot.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+csaw_toplot2 <- read_delim("C:/Users/Stephen/Desktop/Binf Assignment/Analysis/csaw_toplot2.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+normr_toplot <- read_delim("C:/Users/Stephen/Desktop/Binf Assignment/Analysis/normr_toplot.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+normr_toplot2 <- read_delim("C:/Users/Stephen/Desktop/Binf Assignment/Analysis/normr_toplot2.txt", "\t", escape_double = FALSE, trim_ws = TRUE)
+
+```
+
+#Draw the plots
+```{r}
+png(file="C:/Users/Stephen/Desktop/Binf Assignment/csaw plots.png", width =3300, height=2888, res=300)
+
+par(mfcol=c(4,2))
+par(cex=0.5)
+par(cex.lab=2)
+par(cex.axis=1.5)
+par(mar=c(1,4,1,0), oma=c(1,0,2,1))
+
+plot(csaw_toplot$`Random X`, csaw_toplot$`Peak Width shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n')
+points(csaw_toplot2$`Random X`, csaw_toplot2$`Peak Width specific`, pch=1, col='#0000FF88')
+mtext("csaw Peak Width", side=3, cex=0.75, line=0.25, font=2)
+
+plot(csaw_toplot$`Random X`, csaw_toplot$`Average Cov shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n', ylim=c(0,3000))
+points(csaw_toplot2$`Random X`, csaw_toplot2$`Average Cov specific`, pch=1, col='#0000FF88')
+mtext("csaw Peak Average Coverage", side=3, cex=0.75, line=0.25, font=2)
+
+plot(csaw_toplot$`Random X`, csaw_toplot$`Average Cov GM shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n', ylim=c(0,3000))
+points(csaw_toplot2$`Random X`, csaw_toplot2$`Average Cov GM specific`, pch=1, col='#0000FF88')
+mtext("csaw Peak Average Coverage in GM12878 cells", side=3, cex=0.75, line=0.25, font=2)
+
+plot(csaw_toplot$`Random X`, csaw_toplot$`Average Cov MCF shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n', ylim=c(0,3000))
+points(csaw_toplot2$`Random X`, csaw_toplot2$`Average Cov MCF specific`, pch=1, col='#0000FF88')
+mtext("csaw Peak Average Coverage in MCF-7 cells", side=3, cex=0.75, line=0.25, font=2)
+
+plot(normr_toplot$`Random X`, normr_toplot$`Peak Width shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n')
+points(normr_toplot2$`Random X`, normr_toplot2$`Peak Width specific`, pch=1, col='#00FF0088')
+mtext("normR Peak Width", side=3, cex=0.75, line=0.25, font=2)
+
+plot(normr_toplot$`Random X`, normr_toplot$`Average Cov shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n', ylim=c(0,11000))
+points(normr_toplot2$`Random X`, normr_toplot2$`Average Cov specific`, pch=1, col='#00FF0088')
+mtext("normR Peak Average Coverage", side=3, cex=0.75, line=0.25, font=2)
+
+plot(normr_toplot$`Random X`, normr_toplot$`Average Cov GM shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n', ylim=c(0,11000))
+points(normr_toplot2$`Random X`, normr_toplot2$`Average Cov GM specific`, pch=1, col='#00FF0088')
+mtext("normR Peak Average Coverage in GM12878 cells", side=3, cex=0.75, line=0.25, font=2)
+
+plot(normr_toplot$`Random X`, normr_toplot$`Average Cov MCF shared`, xlab="", ylab="", pch=1, col='#FF000088', xaxt='n', ylim=c(0,11000))
+points(normr_toplot2$`Random X`, normr_toplot2$`Average Cov MCF specific`, pch=1, col='#00FF0088')
+mtext("normR Peak Average Coverage in MCF-7 cells", side=3, cex=0.75, line=0.25, font=2)
+
+dev.off()
+
+```
