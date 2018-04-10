@@ -1,0 +1,20 @@
+SAMtools code to combine bam files:
+samtools cat ${FILE1} ${FILE2} > combined_${FILE1}_${FILE2}.bam
+
+BEDtools code to extract coverage at every base from a bam file:
+bedtools genomecov -d -ibam ${FILE1} > ${FILE1}_sorted.bed
+
+awk code to combine counts from bed files (used in attempt to generate DIME input):
+paste ${FILE1}.bed ${FILE2}.bed > merged.bed
+cat merged.bed | awk '{sum=$3+$6; print $1 "\t" $2 "\t" sum}' > pooled.bg
+
+awk code to convert list of coverage to proper bedgraph file and regions of the same coverage (used in attempt to generate DIME input:
+cat ${FILE1} | awk '{print \$1 \"\t\" \$2 \"\t\" \$2+1 \"\t\" \$3}' > ${FILE1}_new_col.bg
+bedtools groupby -i ${FILE1}_new_col.bg -g 4 -c 1,2,3,4 -o first,first,last,first | cut -f 2,3,4,5 > ${FILE1}.bedgraph
+
+awk code to calculate coverage across whole genome for a bam file:
+cat ${FILE1} | awk '{sum+=\$4} END{print sum/3095693983}' > avg_cov_${FILE1}.txt
+
+BEDtools command to generate bed file of coverage for only sites contained in peaks found by the programs:
+bedtools intersect -wa -a ${FILE1}.bed -b PEAKS_FOUND_BY_PROGRAM.bed > all_sites_in_peaks.txt
+
